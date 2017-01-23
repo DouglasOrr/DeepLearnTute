@@ -2,6 +2,7 @@ FROM nvidia/cuda:8.0-cudnn5-devel-ubuntu16.04
 
 RUN apt-get update -q && apt-get install -qy \
         g++-4.9                              \
+        git-core                             \
         nodejs-legacy                        \
         npm                                  \
         python3                              \
@@ -16,6 +17,13 @@ RUN apt-get update -q && apt-get install -qy \
 ENV LC_ALL=C.UTF-8 \
     LANG=C.UTF-8 \
     LIBRARY_PATH=/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/cuda-8.0/targets/x86_64-linux/lib/stubs
+
+RUN cd /tmp                                             \
+    && git clone https://github.com/xianyi/OpenBLAS.git \
+    && cd OpenBLAS                                      \
+    && make DYNAMIC_ARCH=1 NO_AFFINITY=1 NUM_THREADS=32 \
+    && make PREFIX=/opt/openblas install                \
+    && pip3 install --upgrade numpy
 
 COPY requirements.txt /tmp/requirements.txt
 RUN mkdir /usr/bin/gcc-for-nvcc \
