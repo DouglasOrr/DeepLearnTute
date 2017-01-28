@@ -1,3 +1,5 @@
 /local
 /users
 /work
+*.pyc
+__pycache__
