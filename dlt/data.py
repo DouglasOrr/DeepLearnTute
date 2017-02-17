@@ -55,7 +55,7 @@ def parse_uji(lines):
                 raise ValueError(
                     "Unexpected number of points (expected %d, actual %d)"
                     % (int(m.group(1)), len(points)))
-            strokes.append(np.array(points, dtype=np.float))
+            strokes.append(np.array(points, dtype=np.float32))
             if len(strokes) == numstrokes:
                 yield (word, strokes)
                 word = numstrokes = strokes = None
@@ -85,12 +85,12 @@ def _rotate(angle):
     cos = np.cos(angle)
     sin = np.sin(angle)
     return np.array([[cos, -sin],
-                     [sin, cos]], dtype=np.float)
+                     [sin, cos]], dtype=np.float32)
 
 
 def _scale(x, y):
     return np.array([[x, 0],
-                     [0, y]], dtype=np.float)
+                     [0, y]], dtype=np.float32)
 
 
 def _augmentations(strokes,
@@ -107,7 +107,7 @@ def _augmentations(strokes,
     sum_x = sum(sum(x for x, y in stroke) for stroke in strokes)
     sum_y = sum(sum(y for x, y in stroke) for stroke in strokes)
     n = sum(map(len, strokes))
-    center = np.array([sum_x, sum_y], dtype=np.float) / n
+    center = np.array([sum_x, sum_y], dtype=np.float32) / n
 
     norm_strokes = [np.array(stroke) - center for stroke in strokes]
 
@@ -197,7 +197,7 @@ def render(strokes, size):
     x_off = (size - 1) / (2 * scale) - (x_min + x_max) / 2
     y_off = (size - 1) / (2 * scale) - (y_min + y_max) / 2
 
-    a = np.zeros((size, size), dtype=np.float)
+    a = np.zeros((size, size), dtype=np.float32)
     for stroke in strokes:
         coords = [(scale * (p[0] + x_off), scale * (p[1] + y_off))
                   for p in stroke]
@@ -280,7 +280,7 @@ def cli_render(input, output, size):
             'vocab', (len(vocab),), dtype=str_dt
         )[...] = vocab
         f.require_dataset(
-            'x', shape=(len(images), size, size), dtype=np.float
+            'x', shape=(len(images), size, size), dtype=np.float32
         )[...] = np.array(images)
         f.require_dataset(
             'y', shape=(len(chars),), dtype=np.int

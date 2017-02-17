@@ -4,6 +4,7 @@ import os
 import weakref
 import json
 import numpy as np
+from . import data
 
 
 class CustomInput:
@@ -21,17 +22,18 @@ class CustomInput:
     @classmethod
     def _id_classify(cls, payload):
         d = json.loads(payload)
-        return cls._INSTANCES[d["id"]].classify(
-            np.array(d["data"], dtype=np.float32))
+        x = data.render([np.array(s) for s in d['strokes']], 16).reshape(-1)
+        y = cls._INSTANCES[d['id']].classify(x.astype(np.float32))
+        # Our JS can't cope with the JSON "'", so replace it with "\u0027"
+        return json.dumps(dict(x=x.tolist(), y=y)).replace("'", "\\u0027")
 
-    def __init__(self, classify, width=None, height=None,
-                 display_scale=None):
+    def __init__(self, classify, width=None, height=None):
         self._id = '%04x' % random.randint(0, 1 << 16)
         self._INSTANCES[self._id] = self
         self._classify = classify
 
         if height is None and width is None:
-            height = width = 28
+            height = width = 16
         elif height is None:
             height = width
         elif width is None:
@@ -39,26 +41,28 @@ class CustomInput:
         self._width = width
         self._height = height
 
-        if display_scale is None:
-            display_scale = max(width, 256) / width
-        self._display_scale = display_scale
-
     def classify(self, data):
         return self._classify(data)
 
     def _repr_html_(self):
         return string.Template('''
 
-        <canvas id="${ID}-canvas" width="${WIDTH}" height="${HEIGHT}"
-            style="width: ${DISPLAY_WIDTH}px;
-                   height: ${DISPLAY_HEIGHT}px;
-                   border-style: solid;">
+        <canvas id="${ID}-input-canvas" width="256" height="256"
+                style="border-style: solid;">
+        </canvas>
+        <label id="${ID}-label"
+               style="font-size: 12em; width: 1em; text-align: center;"
+        >?</label>
+        <canvas id="${ID}-output-canvas" width="${WIDTH}" height="${HEIGHT}"
+            style="width: 256px; height: 256px;">
         </canvas>
         <p>
-            <label id="${ID}-label" style="font-size: xx-large;">?</label>
-            <button id="${ID}-classify">Classify</button>
-            <button id="${ID}-clear">Clear</button>
+            <button id="${ID}-clear"
+                style="width: 256px; height: 3em;"
+            >Clear (middle click)</button>
         </p>
+        <p><pre id="${ID}-error" style="color: #f00;"></pre></p>
+        <p><pre id="${ID}-output"></pre></p>
         <script type="text/javascript">
             (function () {
                 var custom_input_id = "#${ID}";
@@ -69,6 +73,4 @@ class CustomInput:
         ''').substitute(ID=self._id,
                         JS=self.JS,
                         WIDTH=self._width,
-                        HEIGHT=self._height,
-                        DISPLAY_WIDTH=self._display_scale * self._width,
-                        DISPLAY_HEIGHT=self._display_scale * self._height)
+                        HEIGHT=self._height)
