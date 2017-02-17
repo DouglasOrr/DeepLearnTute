@@ -1,4 +1,12 @@
 chainer
+click
+fastavro
+flake8
 jupyter
 jupyterhub
+h5py
+matplotlib
+nose
+numpy
+scipy
 seaborn

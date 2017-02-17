@@ -1,8 +1,8 @@
 // custom_input_id
 
 var settings = {
-    line_thickness: 2,
-    line_reps: 3
+    line_thickness: 1,
+    line_reps: 2
 };
 
 function get_canvas_image() {

@@ -25,6 +25,11 @@ RUN cd /tmp                                             \
     && make PREFIX=/opt/openblas install                \
     && pip3 install --upgrade numpy
 
+# MNIST dataset
+RUN mkdir /data \
+    && wget http://deeplearning.net/data/mnist/mnist.pkl.gz -qO /data/mnist.pkl.gz
+
+# General requirements
 COPY requirements.txt /tmp/requirements.txt
 RUN mkdir /usr/bin/gcc-for-nvcc \
     && ln -s /usr/bin/gcc-4.9 /usr/bin/gcc-for-nvcc/gcc \
@@ -32,5 +37,5 @@ RUN mkdir /usr/bin/gcc-for-nvcc \
     && npm install -g configurable-http-proxy \
     && pip3 install -r /tmp/requirements.txt
 
-RUN mkdir /data \
-    && wget http://deeplearning.net/data/mnist/mnist.pkl.gz -qO /data/mnist.pkl.gz
+# Build font cache to hide warning
+RUN python3 -c "import matplotlib"

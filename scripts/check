@@ -1,0 +1,3 @@
+set -e
+./scripts/run nosetests
+./scripts/run flake8
