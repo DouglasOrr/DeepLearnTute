@@ -10,6 +10,7 @@ import random
 import json
 import numpy as np
 import h5py
+import matplotlib.pyplot as plt
 
 
 def parse_uji(lines):
@@ -205,6 +206,66 @@ def render(strokes, size):
             for x, y, w in _draw_line(start, end):
                 a[x, y] = max(a[x, y], w)
     return np.swapaxes(a, 0, 1)
+
+
+class Dataset:
+    '''An in-memory dataset of images & labels.
+
+    dataset.x -- (N x D) array of np.float32, flattened images,
+                 where the y-index is major
+
+    dataset.y -- (N) array of np.int labels
+
+    dataset.vocab -- (L) array of characters corresponding to the
+                     human-readable labels
+    '''
+    def __init__(self, x, y, vocab, width, height):
+        self.x = x
+        self.y = y
+        self.vocab = vocab
+        self.char_to_index = {ch: i for i, ch in enumerate(vocab)}
+        self.width = width
+        self.height = height
+
+    def __repr__(self):
+        return 'Dataset[%d images, size %s, from %d labels]' % (
+            len(self), self.x.shape[-1], len(self.vocab))
+
+    def __len__(self):
+        return self.x.shape[0]
+
+    def find_label(self, char):
+        return np.where(self.y == self.char_to_index[char])[0]
+
+    def show(self, indices=None, limit=64):
+        if indices is None:
+            indices = range(limit)
+        xs = self.x[indices]
+        ys = self.y[indices]
+        dim = int(np.ceil(np.sqrt(xs.shape[0])))
+
+        plt.figure(figsize=(16, 16))
+        for plot_index, index, x, y in zip(it.count(1), indices, xs, ys):
+            plt.subplot(dim, dim, plot_index)
+            plt.imshow(x.reshape(self.height, self.width))
+            plt.title(r"$y_{%d}$ = %s" % (index, self.vocab[y]), fontsize=14)
+            plt.gca().set_xticks([])
+            plt.gca().set_yticks([])
+            plt.gca().grid(False)
+
+
+def load_hdf5(path):
+    '''Load a Dataset object from an HDF5 file.
+    '''
+    with h5py.File(path, 'r') as f:
+        x = f['x'][...]
+        return Dataset(
+            x=x.reshape(x.shape[0], -1),
+            y=f['y'][...],
+            vocab=f['vocab'][...],
+            height=x.shape[1],
+            width=x.shape[2]
+        )
 
 
 @click.command('read')
