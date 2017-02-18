@@ -1,1 +1,1 @@
-docker build --rm -t deep-learn-tute scripts
+docker build --rm -t deep-learn-tute .

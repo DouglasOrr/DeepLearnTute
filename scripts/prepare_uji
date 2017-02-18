@@ -1,0 +1,17 @@
+#!/bin/bash
+
+OUT="${1}"
+TESTOUT="${2}"
+
+set -e
+mkdir -p "${OUT}" "${TESTOUT}"
+
+wget -qO "${OUT}/raw" https://archive.ics.uci.edu/ml/machine-learning-databases/uji-penchars/version2/ujipenchars2.txt
+
+python3 -m dlt.data read \
+        "${OUT}/raw" "${OUT}/train.jsonl" "${OUT}/valid.jsonl" "${TESTOUT}/test.jsonl" \
+        --label-filter '[0-9A-Za-z]' --nvalid 10 --ntest 10 --seed 42
+
+python3 -m dlt.data render --size 16 "${OUT}/train.jsonl" "${OUT}/train.hdf"
+python3 -m dlt.data render --size 16 "${OUT}/valid.jsonl" "${OUT}/valid.hdf"
+python3 -m dlt.data render --size 16 "${TESTOUT}/test.jsonl" "${TESTOUT}/test.hdf"

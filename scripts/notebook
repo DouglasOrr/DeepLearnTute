@@ -1,9 +1,6 @@
 mkdir -p work/notebooks
-docker kill dlt-notebook
-docker rm dlt-notebook
 docker run \
     --detach --name dlt-notebook -p 80:8888 \
     -v `pwd`/work:/work -w /work \
-    -v `pwd`/dlt:/app/dlt -e "PYTHONPATH=/app" \
-    deep-learn-tute \
+    douglasorr/deep-learn-tute \
     sh -c "echo \"$(cat users)\" | newusers ; jupyterhub --port 8888 --ip=*"

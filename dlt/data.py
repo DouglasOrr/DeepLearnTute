@@ -280,16 +280,24 @@ def load_hdf5(path):
               help='Number of validation examples per label.')
 @click.option('--ntest', type=click.INT, default=10,
               help='Number of test examples per label.')
+@click.option('--seed', type=click.INT, default=42,
+              help='Seed for random number generation.')
+@click.option('--augment/--no-augment', default=True,
+              help='Should we use data augmentation (rotation & stretching).')
 def cli_read(source, train, valid, test, label_filter,
-             nvalid, ntest):
+             nvalid, ntest, seed, augment):
     '''Generate a JSONlines dataset from UJI pen characters.
     '''
+    random.seed(seed)
+
     # Load & filter
     data = parse_uji(source)
-    data = filter(re.compile(label_filter).match, data)
+    label_pattern = re.compile(label_filter)
+    data = filter(lambda x: label_pattern.match(x[0]) is not None,
+                  data)
 
     # Partition
-    data = it.groupby(sorted(parse_uji(source), key=_first), _first)
+    data = it.groupby(sorted(data, key=_first), _first)
     train_data = []
     valid_data = []
     test_data = []
@@ -301,9 +309,10 @@ def cli_read(source, train, valid, test, label_filter,
         train_data += shuffled_examples[(ntest + nvalid):]
 
     # Augment training data
-    train_data = [(ch, ss)
-                  for ch, strokes in train_data
-                  for ss in _augmentations(strokes)]
+    if augment:
+        train_data = [(ch, ss)
+                      for ch, strokes in train_data
+                      for ss in _augmentations(strokes)]
 
     # Shuffle
     random.shuffle(train_data)
