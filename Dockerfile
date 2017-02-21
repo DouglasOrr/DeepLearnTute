@@ -36,4 +36,6 @@ RUN cd /tmp/dlt \
     && pip3 install -r requirements.txt \
     && python3 setup.py install \
     && ./scripts/prepare_uji /data/uji /test/uji \
+    && mkdir -p /examples \
+    && cp -r examples/* /examples \
     && python3 -c "import matplotlib"

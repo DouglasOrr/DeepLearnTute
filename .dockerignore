@@ -1,5 +1,6 @@
 *
 !dlt/*
 !scripts/*
+!examples/*
 !setup.py
 !requirements.txt

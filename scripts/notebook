@@ -1,6 +1,0 @@
-mkdir -p work/notebooks
-docker run \
-    --detach --name dlt-notebook -p 80:8888 \
-    -v `pwd`/work:/work -w /work \
-    douglasorr/deep-learn-tute \
-    sh -c "echo \"$(cat users)\" | newusers ; jupyterhub --port 8888 --ip=*"

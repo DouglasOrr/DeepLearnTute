@@ -44,21 +44,34 @@ class Log:
         ))
         self.clock += 1
 
-    def show(self, x='event'):
+    def show(self, x='event', smooth=None, smooth_n=100):
         '''Display the logging events as a time series.
 
         x -- either 'event' (logical clock) or 'time' (wall clock)
+
+        smooth - True | False | None - should we smooth the timeseries
+                 True -- always smooth
+                 False -- never smooth
+                 None (defalt) -- auto smooth, when enough datapoints
+
+        smooth_n - number of points to smooth 'towards', smaller numbers
+                   (e.g. 10) will result in a very smooth (but possibly
+                   misleading) curve, higher numbers (e.g. 1000) are less
+                   smooth
         '''
         plt.figure(figsize=(16, 8 * len(self.events)))
         for i, (kind, entries) in enumerate(self.events.items()):
             ax = plt.subplot(len(self.events), 1, i + 1)
             for items in entries.values():
                 df = pd.DataFrame.from_dict(items)
-                smoothing = len(df) / 100
-                df['smoothed'] = df['value'].ewm(com=smoothing).mean()
-                df.plot(x=x,
-                        y=('value' if smoothing < 1 else 'smoothed'),
-                        ax=ax)
+                if smooth is True or (smooth is None and smooth_n < len(df)):
+                    df['smoothed'] = df['value'].ewm(
+                        com=len(df) / smooth_n).mean()
+                    df.plot(x=x, y='smoothed', ax=ax)
+                else:
+                    df.plot(x=x, y='value', ax=ax)
             plt.legend(list(entries.keys()))
             plt.title(kind)
             plt.ylabel(kind)
+            if x == 'time':
+                plt.xlabel('time /s')

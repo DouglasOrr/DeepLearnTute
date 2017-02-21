@@ -261,7 +261,7 @@ def load_hdf5(path):
         x = f['x'][...]
         return Dataset(
             x=x.reshape(x.shape[0], -1),
-            y=f['y'][...],
+            y=f['y'][...].astype(np.int32),
             vocab=f['vocab'][...],
             height=x.shape[1],
             width=x.shape[2]
@@ -362,6 +362,7 @@ def cli():
     '''Base command for dataset processing.
     '''
     pass
+
 
 cli.add_command(cli_read)
 cli.add_command(cli_render)
