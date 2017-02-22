@@ -27,4 +27,4 @@ Any files you save on the server should be accessible in `work/${USER}`.
 
 ### Windows
 
-Most of this should work reasonably on Windows, however the "deploy" script makes use of Docker filesystem forwarding using `-v` (so that notebooks saved inside are visible outside the container). Your mileage may vary with this.
+Most of this should work reasonably on Windows, however the deploy script makes use of Docker filesystem forwarding using `-v` (so that notebooks saved inside are visible outside the container). Your mileage may vary with this.
