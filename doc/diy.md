@@ -51,7 +51,7 @@ After that, the data looks like:
     print(train.y[0])              # 21 - label representation
     print(train.vocab[train.y[0]]) # L  - actual label
 
-_**Exercise** - use slicing to select 20 consecutive images (xs), and 20 associated labels (ys), without writing a loop_
+_**Exercise** - use slicing to select 20 consecutive images (xs), and 20 associated labels (ys), without writing a loop._
 
 
 ## 3. Defining a Model
@@ -73,13 +73,13 @@ A deep learning model is a parameterized function which maps input features to a
 >     np.dot(x, M)          # shape: (10, 5) - transform x's shape from a trailing (3) to trailing (5),
 >                           #                  as M is a (3, 5) matrix
 
-_**Exercise** - create a `(20, 7)` np.array, transform first to `(20, 13)`, then to `(20, 8)` using `np.dot`_
+_**Exercise** - create a `(20, 7)` np.array, transform first to `(20, 13)`, then to `(20, 8)` using `np.dot` (print out the shapes as you go)._
 
 In general, we define the deep learning network for _batches_ of data (since it is typically computationally inefficient to process just one example at a time). For this reason, the first dimension in the shape of the inputs & outputs is the "batch dimension" (call it `N`).
 
 Our input is as described above - an image represented as a 256-element vector of floats in the range `[0 1]`. Due to batching, the input shape is therefore `(N, 256)`.
 
-For output, recall that our task is to predict the most likely label. Predicting a discrete label directly is hard using deep learning, as deep learning techniques focus on continuous, differentiable, functions. Therefore it is easiest to assign a probability to each label, and let the prediction be the highest scoring label. Therefore the output dimension is the number of possible labels, 62, so the output shape is `(N, 62)`.
+For output, recall that our task is to predict the most likely label. Predicting a discrete label directly is hard using deep learning, as deep learning requires continuous differentiable functions. Therefore it is easiest to assign a score to each label, and let the prediction be the highest scoring label. Therefore the output dimension is the number of possible labels, 62, so the output shape is `(N, 62)`.
 
 So we need to design a function that maps `(N, 256) -> (N, 62)`.
 
@@ -104,9 +104,9 @@ To express this function, we'll use our framework - Chainer. Here are the very b
     transform = C.links.Linear(3, 5)
     out = transform(x)                # shape: (10, 5)
 
-_**Exercise** - use `C.links.Linear` to map `(20, 256) -> (20, 62)`, and run it on a batch of images from the input data `train.x`_
+_**Exercise** - use `C.links.Linear` to map `(20, 256) -> (20, 62)`, and run it on a batch of images from the input data `train.x`._
 
-BTW. having done this, you have now defined your simplest network that could solve this task!
+BTW. having done this, you have defined a simple network that could solve this task!
 
 ### Toolbox
 
@@ -125,13 +125,13 @@ To design a deep learning network, you'll use a bunch of standard components. To
 
 ## 4. Training the Model
 
-We're almost ready to train our network. To train a network, it must be contained within a single `Link`. If you are using the simplest network defined already, which just contains one Link (`Linear`), you're already there. To prepare to train multiple links, see the [Chains](#Chains) section below.
+We're almost ready to train our network. To train a network, it must be contained within a single `Link`. If you are using the simplest network defined already, which just contains one Link (`Linear`), you're already there. To prepare to train multiple links, see the [Chains](#chains) section below.
 
 > Note: This is a very condensed version of the [Chainer tutorial](http://docs.chainer.org/en/stable/tutorial/basic.html#optimizer) - see that if you get stuck.
 
-Training a network consists of taking a sequence of steps to decrease a loss function, based on small batches of the training data. We'll show you how to take one such step - it'll be up to you to code up a training loop based on this.
+Training a network consists of taking a sequence of steps to decrease a loss function (which should measure how well a network solves the task), based on small batches of the training data. We'll show you how to take one such step - it'll be up to you to code up a training loop based on this.
 
-    link = ...               # my model
+    link = ...  # my model
 
     # First choose an optimizer & set it up (only done once)
     opt = C.optimizers.SGD()   # start with SGD, but I'd recommend trying Adam soon!
@@ -149,11 +149,11 @@ Training a network consists of taking a sequence of steps to decrease a loss fun
     opt.update()          # update parameters
     print(loss.data)      # how well are we doing, smaller is better
 
-_**Exercise** - take a single optimization step for the network you defined earlier, using a batch of actual data_
+_**Exercise** - take a single optimization step for the network you defined earlier, using a batch of actual data._
 
-Now this needs to become a training loop. A classic training loop will pass through the training data multiple times, splitting it up into batches for individual steps (each taken as per above).
+Now this needs to become a training loop. A classic training loop will pass through the training data multiple times, splitting it up into batches for individual steps (each taken as above).
 
-_**Exercise** - turn your code for a single step into a full training loop, for batch size 128, passing through the data 4 times_
+_**Exercise** - turn your code for a single step into a full training loop, for batch size 128, passing through the data 4 times._
 
 ### Chains
 
@@ -192,15 +192,15 @@ We're very nearly there! If you've kept up so far, there are two outstanding iss
 
 For the first, simply evaluate (but **do not take an optimization step**) on your validation set periodically.
 
-_**Exercise** - run your network to report validation cross entropy loss every time you pass through the training data, without taking an optimization step on it._
+_**Exercise** - run your network to report validation cross entropy loss every time you pass through the training data, without taking an optimization step on it (hint: you can do this in one big batch)._
 
 _**Exercise** - use the `dlt.Log` class to plot validation & training curves._
 
-To address the second, we can use `C.functions.accuracy` (which is used similarly to `softmax_cross_entropy`) to report how many times our first guess for the label is correct.
+To address the second issue, we can use `C.functions.accuracy` (which is run identically to `softmax_cross_entropy`) to report how many times our top prediction for the label is correct.
 
 _**Exercise** - report accuracy for your network - before training it should be 1-2% - has it improved?_
 
-_**Exercise** - try your classifier out by hand with the custom input control (N.B. `np.argmax` may help)_
+_**Exercise** - try your classifier out by hand with the custom input control (N.B. `np.argmax` may help)._
 
 
 ## ... and iterate
@@ -208,11 +208,11 @@ _**Exercise** - try your classifier out by hand with the custom input control (N
 If you have followed the exercises so far, you should have a single layer `Linear` network, trained using `SGD`, using batch size `128`, passing `4` times over the training data. The accuracy probably isn't very good, so why not try (in any order):
 
  - Create a more complex function:
-     - You started with `(N, 256) -> Linear(256, 62) -> (N, 62)`
-     - What about `(N, 256) -> Linear(256, D) -> Tanh -> Linear(D, 62) -> (N, 62)` for some choice of `D`?
+     - You started with `(N, 256) -> Linear(256, 62) -> (N, 62)`.
+     - Maybe try `(N, 256) -> Linear(256, D) -> Tanh -> Linear(D, 62) -> (N, 62)` for some choice of `D` (this is a classic multilayer perceptron).
      - Follow your imagination...
- - Try another [optimizer](http://docs.chainer.org/en/stable/reference/optimizers.html) (e.g. Adam, AdaDelta, RMSprop)
+ - Try another [optimizer](http://docs.chainer.org/en/stable/reference/optimizers.html) (e.g. Adam, AdaDelta, RMSprop).
  - Increase the number of passes through the training data (but try to stay `<= 10`, for sake of time).
- - Change the batch size
+ - Change the batch size.
 
 _**Exercise** - improve the accuracy of your system - can you make it to 50%, 60%, 70%, 80%, 90% on the validation set?_
