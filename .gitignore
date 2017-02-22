@@ -3,4 +3,5 @@
 /work
 /build
 *.pyc
+*.html
 __pycache__
