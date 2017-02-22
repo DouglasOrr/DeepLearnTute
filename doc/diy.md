@@ -8,6 +8,8 @@ We want to encourage you to do-it-yourself in this practical. But to make it ach
  - Documented an outline of a machine learning system, for your reference (below).
  - Introduced some Chainer concepts for implementing your model (below).
 
+If you follow through the _**Exercise**_ lines as you go, you should end up with a simple, working, deep learning system.
+
 
 ## 1. The Problem
 
@@ -39,7 +41,7 @@ We have preprocessed the data, by:
  - Augmenting training data - scale & rotate each training example to generate more training examples.
  - Normalizing & rendering to 16x16 greyscale patches - it is easier to use these as input.
 
-After all this, the data looks like this:
+After that, the data looks like:
 
     train = dlt.load_hdf5('/data/uji/train.hdf')
     print(train.x.shape)  # (93000, 256)
@@ -56,42 +58,42 @@ _**Exercise** - use slicing to select 20 consecutive images (xs), and 20 associa
 
 A deep learning model is a parameterized function which maps input features to an output, which can be compared with an ideal output using a loss function.
 
-> Aside: At every point when defining a model, we will deal with multidimensional arrays - typically vectors (1D arrays) & matrices (2D arrays). It is important to be familiar with these arrays, and how they operate. **In particular, I recommend treating the shape of the array as its "type", and try to know at every point what shape your intermediate values are.**
+> Aside: At every point when defining a model, we will deal with multidimensional arrays - typically vectors (1D arrays) & matrices (2D arrays). It is important to be familiar with these arrays, and how they operate. In particular, I recommend treating the shape of the array as its "type", and **try to be aware at every point what shape your arrays are.**
 
 > For instance:
 
->     x = np.ones((10, 3))   # shape: (10, 3) - an easy way to create arrays, for playing around
->     y = np.zeros((10, 3))  # shape: (10, 3)
+>     x = np.ones((10, 3))  # shape: (10, 3) - an easy way to create arrays, for playing around
+>     y = np.zeros((10, 3)) # shape: (10, 3)
 >
->     x + y                  # shape: (10, 3) - this is allowed - the shapes match
+>     x + y                 # shape: (10, 3) - this is allowed - the shapes match
 >
->     x + np.ones((10, 4))   # error          - shapes don't match
+>     x + np.ones((10, 4))  # error          - shapes don't match
 >
->     M = np.ones((3, 5))    # shape: (3, 5)
->     np.dot(x, M)           # shape: (10, 5) - transform x's shape, from a trailing (3) to trailing (5),
->                              #                  as M is a (3, 5) matrix
+>     M = np.ones((3, 5))   # shape: (3, 5)
+>     np.dot(x, M)          # shape: (10, 5) - transform x's shape from a trailing (3) to trailing (5),
+>                           #                  as M is a (3, 5) matrix
 
-> _**Exercise** - create a `(20, 7)` array, transform first to `(20, 13)`, then to `(20, 8)` using `np.dot`_
+_**Exercise** - create a `(20, 7)` np.array, transform first to `(20, 13)`, then to `(20, 8)` using `np.dot`_
 
 In general, we define the deep learning network for _batches_ of data (since it is typically computationally inefficient to process just one example at a time). For this reason, the first dimension in the shape of the inputs & outputs is the "batch dimension" (call it `N`).
 
-Our input is as described above - an image represented as a 256-element vector of floats `[0 1]`. Due to batching, the input shape is therefore `(N, 256)`.
+Our input is as described above - an image represented as a 256-element vector of floats in the range `[0 1]`. Due to batching, the input shape is therefore `(N, 256)`.
 
-For output, recall that our task is to predict the most likely class. Predicting a discrete label is hard using deep learning, so it is easiest to assign a probability to each label, and let the prediction be the maximum scoring label. Therefore the output dimension is the number of possible labels, 62, so the output shape is `(N, 62)`.
+For output, recall that our task is to predict the most likely label. Predicting a discrete label directly is hard using deep learning, as deep learning techniques focus on continuous, differentiable, functions. Therefore it is easiest to assign a probability to each label, and let the prediction be the highest scoring label. Therefore the output dimension is the number of possible labels, 62, so the output shape is `(N, 62)`.
 
 So we need to design a function that maps `(N, 256) -> (N, 62)`.
 
 ### Chainer
 
-To express this function, we'll need to use our framework - Chainer. Here are the very basics (see also the [tutorial](http://docs.chainer.org/en/stable/tutorial/basic.html#forward-backward-computation)):
+To express this function, we'll use our framework - Chainer. Here are the very basics (see also the [tutorial](http://docs.chainer.org/en/stable/tutorial/basic.html#forward-backward-computation)):
 
     import chainer as C
 
-    # Get data in from numpy to a Variable
+    # Get data from numpy into a Variable
     # (N.B. you may often have to use np.float32/int32 explicitly)
     x = C.Variable(np.zeros((10, 3), dtype=np.float32))
 
-    # Get data out to numpy
+    # Get data back out to numpy
     print(x.data)
 
     # Work on Variables using Functions (y & z are also Variables)
@@ -102,9 +104,9 @@ To express this function, we'll need to use our framework - Chainer. Here are th
     transform = C.links.Linear(3, 5)
     out = transform(x)                # shape: (10, 5)
 
-_**Exercise** - use `C.links.Linear` to map `(20, 256) -> (20, 62)` ; now run it on a batch of images from the input data `train.x`_
+_**Exercise** - use `C.links.Linear` to map `(20, 256) -> (20, 62)`, and run it on a batch of images from the input data `train.x`_
 
-Actually, having done this, you have now defined your simplest network that could solve the task!
+BTW. having done this, you have now defined your simplest network that could solve this task!
 
 ### Toolbox
 
@@ -112,35 +114,36 @@ To design a deep learning network, you'll use a bunch of standard components. To
 
 | Link/Function | Transforms shape | Purpose |
 | ------------- | ---------------- | ------- |
-| C.links.Linear | (N, A) -> (N, B) | Changing dimension & general computation |
-| C.functions.tanh | (N, X) -> (N, X) | Separating linear layers for more interesting computation |
-| C.functions.sigmoid | (N, X) -> (N, X) | Like tanh, but sometimes used as a "gate", as outputs are [0 1] |
-| C.functions.relu | (N, X) -> (N, X) | Another _activation function_ (like tanh, sigmoid) - there are loads of these, doing similar jobs! |
-| C.links.Highway | (N, X) -> (N, X) | A fancy combination of identity & a square linear transform |
-| C.functions.softmax\_cross\_entropy | (N, X), (N,) -> () | Multiclass classification loss function, to compare a batch of scores against target labels |
-| C.functions.accuracy | (N, X), (N,) -> () | Multiclass classification accuracy, for evaluation |
+| C.links.Linear | `(N, A) -> (N, B)` | Changing dimension & general computation |
+| C.functions.tanh | `(N, X) -> (N, X)` | Separating linear layers for more interesting computation |
+| C.functions.sigmoid | `(N, X) -> (N, X)` | Like tanh, but sometimes used as a "gate", as outputs are [0 1] |
+| C.functions.relu | `(N, X) -> (N, X)` | Another _activation function_ (like tanh, sigmoid) - there are loads of these, doing similar jobs! |
+| C.links.Highway | `(N, X) -> (N, X)` | A fancy combination of identity & a square linear transform |
+| C.functions.softmax\_cross\_entropy | `(N, X), (N,) -> ()` | Multiclass classification loss function, to compare a batch of scores against target labels |
+| C.functions.accuracy | `(N, X), (N,) -> ()` | Multiclass classification accuracy, for evaluation |
 
 
 ## 4. Training the Model
 
 We're almost ready to train our network. To train a network, it must be contained within a single `Link`. If you are using the simplest network defined already, which just contains one Link (`Linear`), you're already there. To prepare to train multiple links, see the [Chains](#Chains) section below.
 
-> This is a very condensed version of the [Chainer tutorial](http://docs.chainer.org/en/stable/tutorial/basic.html#optimizer) - see that if you get stuck.
+> Note: This is a very condensed version of the [Chainer tutorial](http://docs.chainer.org/en/stable/tutorial/basic.html#optimizer) - see that if you get stuck.
 
-Training a network consists of taking a series of steps to decrease a loss function, based on small batches of the training data. We'll show you how to take one such step - it'll be up to you to code up a training loop based on this.
+Training a network consists of taking a sequence of steps to decrease a loss function, based on small batches of the training data. We'll show you how to take one such step - it'll be up to you to code up a training loop based on this.
 
-    # First choose an optimizer & set it up
     link = ...               # my model
-    opt = C.optimizers.SGD() # start with SGD, but I'd recommend trying Adam as soon as it works!
-    opt.setup(link)
-    opt.use_cleargrads()
 
-    # Run the network, and take a single gradient step
-    x = C.Variable(...)
-    y = C.Variable(...)
+    # First choose an optimizer & set it up (only done once)
+    opt = C.optimizers.SGD()   # start with SGD, but I'd recommend trying Adam soon!
+    opt.use_cleargrads()
+    opt.setup(link)
+
+    # Run the network, and take a single small gradient-based step
+    x = C.Variable(...)   # shape (N, 256)
+    y = C.Variable(...)   # shape (N,) integers
     link.cleargrads()     # clear gradients
-    p = link(x)           # run the model to get predictions
-                          # (should include any other functions you're using)
+    p = link(x)           # run the model to get predictions (shape (N, 62))
+                          # (this should include any other functions you're using)
     loss = C.functions.softmax_cross_entropy(p, y)
     loss.backward()       # compute gradients
     opt.update()          # update parameters
@@ -148,13 +151,13 @@ Training a network consists of taking a series of steps to decrease a loss funct
 
 _**Exercise** - take a single optimization step for the network you defined earlier, using a batch of actual data_
 
-Now this needs to become a training loop. A classic training loop will pass through the training data multiple times, splitting it up into batches for individual steps (as above).
+Now this needs to become a training loop. A classic training loop will pass through the training data multiple times, splitting it up into batches for individual steps (each taken as per above).
 
 _**Exercise** - turn your code for a single step into a full training loop, for batch size 128, passing through the data 4 times_
 
 ### Chains
 
-Chainer composes objects using the aggregate pattern. A `Chain` is a `Link` which can contain many of it's own component `Links`. If this sounds complex, don't worry! For us, all we need to do is make a single Chain that contains all the Links we use. For example, if we were running:
+Chainer composes objects using the aggregate pattern. A `Chain` is a `Link` which can contain many of it's own component `Links`. If this sounds complex, don't worry! For us, all we'll do is make a single Chain that contains all the Links we use. For example, if we were running:
 
     x = ...                       # shape: (N, 3)
     first = C.links.Linear(3, 5)
@@ -189,25 +192,27 @@ We're very nearly there! If you've kept up so far, there are two outstanding iss
 
 For the first, simply evaluate (but **do not take an optimization step**) on your validation set periodically.
 
-_**Exercise** - run your network to report validation cross entropy loss every time you pass through the training data, without taking an optimization step._
+_**Exercise** - run your network to report validation cross entropy loss every time you pass through the training data, without taking an optimization step on it._
 
 _**Exercise** - use the `dlt.Log` class to plot validation & training curves._
 
 To address the second, we can use `C.functions.accuracy` (which is used similarly to `softmax_cross_entropy`) to report how many times our first guess for the label is correct.
 
-_**Exercise** - report accuracy for your network - before training it should be 1-2%, but how well can you do?_
+_**Exercise** - report accuracy for your network - before training it should be 1-2% - has it improved?_
+
+_**Exercise** - try your classifier out by hand with the custom input control (N.B. `np.argmax` may help)_
 
 
 ## ... and iterate
 
-If you have followed the exercises so far, you should have a single layer `Linear` network, trained using `SGD`, trained using batch size `128`, passing `4` times over the training data. The accuracy probably isn't very good, so why not try (in any order):
+If you have followed the exercises so far, you should have a single layer `Linear` network, trained using `SGD`, using batch size `128`, passing `4` times over the training data. The accuracy probably isn't very good, so why not try (in any order):
 
  - Create a more complex function:
      - You started with `(N, 256) -> Linear(256, 62) -> (N, 62)`
      - What about `(N, 256) -> Linear(256, D) -> Tanh -> Linear(D, 62) -> (N, 62)` for some choice of `D`?
-     - More fun here...
+     - Follow your imagination...
  - Try another [optimizer](http://docs.chainer.org/en/stable/reference/optimizers.html) (e.g. Adam, AdaDelta, RMSprop)
- - Increase the number of passes through the training data (try to stay `<= 10`, for sake of time).
+ - Increase the number of passes through the training data (but try to stay `<= 10`, for sake of time).
  - Change the batch size
 
 _**Exercise** - improve the accuracy of your system - can you make it to 50%, 60%, 70%, 80%, 90% on the validation set?_
