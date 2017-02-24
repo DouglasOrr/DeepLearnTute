@@ -5,6 +5,7 @@ import collections
 import time
 import matplotlib.pyplot as plt
 import pandas as pd
+import chainer as C
 
 
 class Log:
@@ -25,6 +26,10 @@ class Log:
             lambda: collections.defaultdict(list))
         self.t0 = time.time()
 
+    @property
+    def elapsed(self):
+        return time.time() - self.t0
+
     def add(self, kind, name, value):
         '''Add a logging event. Logging events of the same 'kind' (with
         different 'names') should have the same scale, as they will be plotted
@@ -37,9 +42,10 @@ class Log:
 
         value -- scalar value of the event
         '''
+        v = float(value.data if isinstance(value, C.Variable) else value)
         self.events[kind][name].append(dict(
-            value=value,
-            time=time.time() - self.t0,
+            value=v,
+            time=self.elapsed,
             event=self.clock,
         ))
         self.clock += 1
