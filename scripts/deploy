@@ -23,7 +23,7 @@ def prepare(args):
             subprocess.check_call(string.Template(
                 'docker run --rm -it -v ${WORK}:/work ${IMAGE}'
                 ' sh -c "cp /examples/Tutorial.ipynb /work/${USER}'
-                ' && chmod ugo+rw /work/${USER}/Tutorial.ipynb"'
+                ' && chmod -R ugo+rw /work/${USER}"'
             ).substitute(WORK=os.path.abspath(args.work),
                          USER=user,
                          IMAGE=args.image),
@@ -39,11 +39,14 @@ def start(args):
 
     subprocess.check_call(string.Template(
         'docker run --detach --name dlt-notebook -p 80:80'
+        ' -e "OPENBLAS_NUM_THREADS=${NTHREADS}"'
         ' -v ${WORK}:/work -w /work' +
         (' -v $$(pwd):/app -e "PYTHONPATH=/app"' if args.dev else '') +
         ' ${IMAGE} sh -c "echo \\"$$(cat users)\\" | newusers'
-        ' ; jupyterhub --port 80 --ip=*"'
-    ).substitute(WORK=os.path.abspath(args.work),
+        ' ; jupyterhub --port 80 --ip=*'
+        ' -f /etc/jupyterhub/jupyterhub_config.py"'
+    ).substitute(NTHREADS=args.num_threads,
+                 WORK=os.path.abspath(args.work),
                  IMAGE=args.image),
                           shell=True)
 
@@ -69,6 +72,8 @@ parser_start.add_argument('-r', '--restart', action='store_true',
 parser_start.add_argument('--dev', action='store_true',
                           help='Forward the current directory into the'
                           ' container, at /app')
+parser_start.add_argument('-n', '--num-threads', default=2,
+                          help='Number of OPENBLAS threads to use')
 parser_start.set_defaults(action=start)
 
 args = parser.parse_args()

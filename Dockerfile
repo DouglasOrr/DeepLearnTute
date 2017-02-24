@@ -32,10 +32,12 @@ RUN cd /tmp                                             \
 
 # Library & data
 COPY . /tmp/dlt
-RUN cd /tmp/dlt \
-    && pip3 install -r requirements.txt \
-    && python3 setup.py install \
-    && ./scripts/prepare_uji /data/uji /test/uji \
-    && mkdir -p /examples \
-    && cp -r examples/* /examples \
-    && python3 -c "import matplotlib"
+RUN cd /tmp/dlt                                         \
+    && pip3 install -r requirements.txt                 \
+    && python3 setup.py install                         \
+    && ./scripts/prepare_uji /data/uji /test/uji        \
+    && mkdir -p /examples                               \
+    && cp -r examples/* /examples                       \
+    && mkdir -p /etc/jupyterhub                         \
+    && cp scripts/jupyterhub_config.py /etc/jupyterhub/ \
+    && echo "admin:istrator::::/home/admin:" | newusers

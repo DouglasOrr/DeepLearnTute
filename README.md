@@ -25,6 +25,8 @@ Now start the server:
 You should now be able to go to http://localhost & log into your server (for each account you created the password is the same as the username).
 Any files you save on the server should be accessible in `work/${USER}`.
 
+You can also use user `admin`, password `istrator` to get to an administrator interface.
+
 ### Windows
 
 Most of this should work reasonably on Windows, however the deploy script makes use of Docker filesystem forwarding using `-v` (so that notebooks saved inside are visible outside the container). Your mileage may vary with this.
