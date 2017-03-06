@@ -14,18 +14,18 @@ As this is built on Docker, setup should be quite simple (on Linux & Mac):
  - Install [Python 3](https://www.python.org/downloads/)
  - Either clone this repo, or download the [deploy script](https://raw.githubusercontent.com/DouglasOrr/DeepLearnTute/master/scripts/deploy)
 
-First set up the workspace, adding some users:
+First set up the workspace, adding yourself as a user:
 
-    ./scripts/deploy prepare USER1 USER2 ...
+    ./scripts/deploy prepare YOURNAME
 
 Now start the server:
 
     ./scripts/deploy start
 
-You should now be able to go to http://localhost & log into your server (for each account you created the password is the same as the username).
-Any files you save on the server should be accessible in `work/${USER}`.
+You should now be able to go to [http://localhost](http://localhost) & log into your server (for any accounts you created the password is the same as the username).
+Any files you save on the server should be accessible in `work/${USER}`, from the directory you started the server from.
 
-You can also use user `admin`, password `istrator` to get to an administrator interface.
+(N.B. You can also use user `admin`, password `istrator` to get to an administrator interface.)
 
 ### Windows
 
