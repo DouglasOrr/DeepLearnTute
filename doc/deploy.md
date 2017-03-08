@@ -12,6 +12,8 @@ On the Azure web UI:
 
 Wait for it to start, SSH into machine, then:
 
+    sudo usermod -aG docker ${USER}
+    sudo apt install -y tree emacs-nox htop zip
     wget https://raw.githubusercontent.com/DouglasOrr/DeepLearnTute/master/scripts/deploy
     chmod +x deploy
     ./deploy prepare USER1 USER2...
