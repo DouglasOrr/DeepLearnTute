@@ -22,7 +22,7 @@ def prepare(args):
             # Copy in a tutorial notebook from Docker
             subprocess.check_call(string.Template(
                 'docker run --rm -it -v ${WORK}:/work ${IMAGE}'
-                ' sh -c "cp /examples/Tutorial.ipynb /work/${USER}'
+                ' sh -c "cp /examples/*.ipynb /work/${USER}'
                 ' && chmod -R ugo+rw /work/${USER}"'
             ).substitute(WORK=os.path.abspath(args.work),
                          USER=user,
