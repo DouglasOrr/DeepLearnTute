@@ -9,7 +9,10 @@ import argparse
 def prepare(args):
     '''Create logins & initialize user home directories.
     '''
-    with open(args.users_file, 'w') as f:
+    if not os.path.isdir(args.work):
+        os.makedirs(args.work)
+
+    with open(os.path.join(args.work, 'users.txt'), 'w') as f:
         for user in args.user:
             # Add the user to the list
             f.write('U:U::::/work/U:\n'.replace('U', user))
@@ -42,7 +45,7 @@ def start(args):
         ' -e "OPENBLAS_NUM_THREADS=${NTHREADS}"'
         ' -v ${WORK}:/work -w /work' +
         (' -v $$(pwd):/app -e "PYTHONPATH=/app"' if args.dev else '') +
-        ' ${IMAGE} sh -c "echo \\"$$(cat users)\\" | newusers'
+        ' ${IMAGE} sh -c "newusers < users.txt'
         ' ; jupyterhub --port 80 --ip=*'
         ' -f /etc/jupyterhub/jupyterhub_config.py"'
     ).substitute(NTHREADS=args.num_threads,
@@ -58,8 +61,6 @@ parser.add_argument('--work', type=str, default='work',
 parser.add_argument('--image', type=str,
                     default='douglasorr/deep-learn-tute:latest',
                     help='Docker image to use')
-parser.add_argument('--users-file', type=str, default='users',
-                    help='File to list user logins')
 subparsers = parser.add_subparsers()
 
 parser_prepare = subparsers.add_parser('prepare')
