@@ -1,0 +1,15 @@
+IMAGE="douglasorr/deep-learn-tute:latest"
+
+echo "+----------------------------------------------------------+"
+echo "| Starting a local server (may take a while to download)   |"
+echo "|                                                          |"
+echo "| If everything works, you'll see a link in your terminal  |"
+echo "| which will take you to a fresh notebook server.          |"
+echo "|                                                          |"
+echo "| WARNING: Any notebooks you save inside this server       |"
+echo "| will be lost when you exit the server with Ctrl+C        |"
+echo "+----------------------------------------------------------+"
+
+docker run --rm -it -p 8888:8888 -w /examples \
+       ${IMAGE} \
+       jupyter notebook --allow-root --ip '*' --port 8888

@@ -247,7 +247,7 @@ class Dataset:
         plt.figure(figsize=(16, 16))
         for plot_index, index, x, y in zip(it.count(1), indices, xs, ys):
             plt.subplot(dim, dim, plot_index)
-            plt.imshow(x.reshape(self.height, self.width))
+            plt.imshow(x.reshape(self.height, self.width), cmap='Greys')
             plt.title(r"$y_{%d}$ = %s" % (index, self.vocab[y]), fontsize=14)
             plt.gca().set_xticks([])
             plt.gca().set_yticks([])

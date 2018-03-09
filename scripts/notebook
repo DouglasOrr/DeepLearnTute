@@ -1,0 +1,3 @@
+docker run --rm -it -p 8888:8888 -w /work -v `pwd`:/work -e PYTHONPATH=/work \
+       deep-learn-tute \
+       jupyter notebook --allow-root --ip '*' --port 8888

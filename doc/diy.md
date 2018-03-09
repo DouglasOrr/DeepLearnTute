@@ -28,25 +28,14 @@ Formally, this problem is _multiclass classification_ (within _supervised learni
     A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
     a b c d e f g h i j k l m n o p q r s t u v w x y z
 
-When we define a problem, it is also useful to think of an _objective_ - this is a single number which measures how good we are at solving the problem.
-Also called the _loss_, this is something we should minimize in order to find good a good deep learning function.
+_**Exercise** - If you randomly (uniformly) choose a label (from: 0-9, a-z, A-Z), what is the probability of getting it right?_
 
-We strongly recommend using the loss called `softmax_cross_entropy` for this exercise. This loss function accepts a score for each _target label_, and is smaller (better) when the actual target has a higher score than other targets.
-
-_**Exercise** - use the `test_softmax_cross_entropy` function to answer the following questions:_
- - what scores `[a, b]` give the best (lowest) softmax_cross_entropy for balanced coin tosses (targets: `[0, 1]`)?
-   - what scores give the worst (highest) softmax_cross_entropy?
- - what scores give the best softmax_cross_entropy for unbalanced coin tosses (targets: `[1, 1, 1, 1, 1]`)?
- - for a dice roll (6 scores), if you predict `[0, 0, 0, 0, 0, 0]`, what is the softmax_cross_entropy of the following rolls: `[0, 0, 1, 2, 3, 4, 5, 5, 5, 5]`?
-   - what if you predict `[1, 1, 1, 1, 1, 1]`?
-   - how can you get a better softmax_cross_entropy?
-
-Hopefully now you have some intuition for how softmax_cross_entropy behaves - it prefers high scores for targets that are frequent (likely to occur), and low scores for targets that are infrequent (unlikely to occur). This makes it a good loss function for multiclass classification, so to solve our problem we must try to minimize softmax_cross_entropy.
+_**Exercise** - Write code for `simple_classifier(image)` to detect the difference between an image of `a` and `b` (try drawing some yourself), just using the average value of the pixels. It's fine to use trial and error. Try testing it with the person next to you._
 
 
 ## 2. Getting Data
 
-Our data is drawn from the [UJI Pen Characters v2 Data Set](https://archive.ics.uci.edu/ml/datasets/UJI+Pen+Characters+(Version+2)). Some key stats:
+Our data is adapted from the [UJI Pen Characters v2 Data Set](https://archive.ics.uci.edu/ml/datasets/UJI+Pen+Characters+(Version+2)). Some key stats:
 
  - Number of instances: 11640
  - Number of labels: 97
@@ -72,9 +61,16 @@ After that, the data looks like:
     print(train.y[0])              # 21 - label representation
     print(train.vocab[train.y[0]]) # L  - actual label
 
-_**Exercise** - use slicing to select 20 consecutive images (xs), and 20 associated labels (ys), without writing a loop._
+_**Exercise** - complete the marked code to calculate the accuracy of your classifier._
+ - _**Hint** - it should be more than 50%, as you could achieve that by always returning "a"!_
 
-Now might be a good time to think - if you weren't using deep learning, how would you solve this problem - how would you figure out the ys from just the xs?
+OK, so you were able to do better than pure guessing - but that was an easy "a" or "b" - what if you had to guess from `{a b c d ... A B C D ... 0 1 2 3 ...}` - that's much harder! Writing more complex rules by hand is not going to solve this problem (which is why we're using deep learning.)
+
+Now we'll try to select a batch of data - this is a key part of training.
+
+_**Exercise** - use slicing to select 20 consecutive images (xs), and 20 associated labels (ys), without writing a loop._
+ - _**Hint** - remember slicing: `data[start:end]` (the slice stops just before `end`)._
+ - _**Note** - this is your "example batch" - give your xs & ys good names, as we'll use them later._
 
 
 ## 3. Defining a Model
@@ -85,7 +81,7 @@ In general, we define the deep learning function for _batches_ of data (since it
 
 Our input is as described above - a greyscale image represented as a 256-element vector of floats in the range `[0 1]`. Due to batching, the input shape is therefore `(N, 256)`.
 
-Our output will be a set of scores for each label (an array of `62` float scores), which can be fed into the `softmax_cross_entropy` loss. There will be a different set of scores for each example in the batch (as the scores must depend on the input image), so the output shape is `(N, 62)`.
+Our output will be a list of scores for each label (an array of `62` float scores), which can be fed into the loss function `softmax_cross_entropy`. The scores correspond to the characters at each position in `train.vocab`. There will be a different set of scores for each example in the batch (as the scores must depend on the input image), so the output shape is `(N, 62)`.
 
 So we need to design a function that maps `(N, 256) -> (N, 62)`.
 
@@ -110,38 +106,36 @@ To express this function, we'll use our framework - Chainer. Here is a review of
     transform = C.links.Linear(3, 5)
     out = transform(x)                # shape: (10, 5)
 
-_**Exercise** - use `C.links.Linear` to map a variable of shape `(20, 256) -> (20, 62)`, and run it on a batch of images from the input data `train.x`._
+_**Exercise** - use `C.links.Linear` to map a variable of shape `(20, 256) -> (20, 62)`. Now run it on the batch of images (xs) you have already selected from the input data._
 
-_**Note** - having done this, you have defined a simple network that could solve this task!_
+_**Note** - you have now defined a simple model that is able to solve the task (your Link)!_
 
 
 ## 4. Training the Model
 
-We're almost ready to train our network. To train a network, it must be contained within a single `Link` - fortunately, we only have a single link in our first function, so we're already there.
+We're almost ready to train our model. To train a model, it must be contained within a single `Link` - fortunately, we only have a single link in our first function, so we're already there.
 
 > Note: This is a very condensed version of the [Chainer tutorial](http://docs.chainer.org/en/stable/tutorial/basic.html#optimizer) - see that if you get stuck.
 
-Training a network consists of taking a sequence of steps to decrease a loss function, based on small batches of the training data. We'll show you how to take one such step - it'll be up to you to code up a training loop based on this.
+Training a model consists of taking a sequence of steps to decrease a loss function, based on small batches of the training data. We'll show you how to take one step - it's up to you to code up a training loop that takes multiple steps.
 
-    link = ...  # my model
+    model = ...  # my model (should be a Link or a Chain)
 
     # First time setup (only once): choose an optimizer & set it up
     opt = C.optimizers.SGD()   # start with SGD, but I'd recommend trying Adam soon!
-    opt.use_cleargrads()
-    opt.setup(link)
+    opt.setup(model)
 
-    # For each batch: run the network, and take a single small gradient-based step
+    # For each batch: run the model, and take a single small gradient-based step
     x = C.Variable(...)   # shape (N, 256)
     y = C.Variable(...)   # shape (N,) integers
-    link.cleargrads()     # clear gradients
-    p = link(x)           # run the model to get predictions (shape (N, 62))
-                          # (this should include any other functions you're using)
+    model.cleargrads()     # clear gradients
+    p = model(x)           # run the model to get predictions (shape (N, 62))
     loss = C.functions.softmax_cross_entropy(p, y)
     loss.backward()       # compute gradients
     opt.update()          # update parameters
     print(loss.data)      # how well are we doing, smaller is better
 
-_**Exercise** - take a single optimization step for the network you defined earlier, using a batch of actual data._
+_**Exercise** - take a single optimization step for the model you defined earlier, using the batch of actual data._
 
 Now this needs to become a training loop. A classic training loop will pass through the training data multiple times, splitting it up into batches for individual steps (each taken as above).
 
@@ -158,26 +152,27 @@ We're very nearly there! If you've kept up so far, there are two outstanding iss
  1. We are only reporting results for our training data - what about overfitting?
  2. Our results (cross entropy loss) are hard to interpret.
 
-For the first, simply evaluate (but **do not take an optimization step**) on your validation set periodically.
+For the first, you can simply evaluate (but **do not take an optimization step**) on your validation set periodically.
 
-_**Exercise** - run your network to report validation cross entropy loss every time you pass through the training data, without taking an optimization step on it (hint: you can do this in one big batch)._
+_**Exercise** - run your model to report validation cross entropy loss every time you pass through the training data, without taking an optimization step on it.
+ - _**Hint** - you can do this in one big batch._
 
 _**Exercise** - use the `dlt.Log` class to plot validation & training curves._
 
 To address the second issue, we can use `C.functions.accuracy` (which is run identically to `softmax_cross_entropy`) to report how many times our top prediction for the label is correct.
 
-_**Exercise** - report accuracy for your network - before training it should be 1-2% - has it improved?_
+_**Exercise** - report accuracy for your model - before training it should be 1-2% - has it improved?_
 
 _**Exercise** - try your classifier out by hand with the custom input control (N.B. remember you need a batch dimension `N`, even if `N=1`.)_
 
 
 ## 6. Iterate!
 
-If you have followed the exercises so far, you should have a single layer `Linear` network, trained using `SGD`, using batch size `128`, passing `4` times over the training data. The accuracy probably isn't very good, so why not try (in any order):
+If you have followed the exercises so far, you should have a single layer `Linear` model, trained using `SGD`, using batch size `128`, passing `4` times over the training data. The accuracy probably isn't very good, so why not try (in any order):
 
  - Create a more complex function:
      - You started with `(N, 256) -> Linear(256, 62) -> (N, 62)`.
-     - Maybe try `(N, 256) -> Linear(256, D) -> Tanh -> Linear(D, 62) -> (N, 62)` for some choice of `D` (this is a classic multilayer perceptron). See Appendix A1 for details on how to train this network (as you need to create a single link containing both linear links, to be able to train it).
+     - Maybe try `(N, 256) -> Linear(256, D) -> Tanh -> Linear(D, 62) -> (N, 62)` for some choice of `D` (this is a classic multilayer perceptron). See Appendix A1 for details on how to train this model (as you need to create a single link containing both linear links, to be able to optimize it).
      - Follow your imagination (see Appendix A2)...
  - Try another [optimizer](http://docs.chainer.org/en/stable/reference/optimizers.html) (e.g. Adam, AdaDelta, RMSprop).
  - Increase the number of passes through the training data (but try to stay `<= 10`, for sake of time).
@@ -198,9 +193,9 @@ Chainer composes objects using the aggregate pattern. A `Chain` is a `Link` whic
 
     # Problem - we can't call `optimizer.setup()` with both `first` and `second`!
 
-Now we can combine the Links into a Chain:
+Instead, we should combine the two Links into a single Chain:
 
-    class Network(C.Chain):
+    class Model(C.Chain):
         def __init__(self):
             super().__init__(
                 first=C.links.Linear(3, 5),  # only links need to go here, not functions
@@ -208,21 +203,18 @@ Now we can combine the Links into a Chain:
             )
 
         def __call__(self, x):
-            '''x -- shape: (N, 3)
-            returns -- shape: (N, 7)
-            '''
             a = self.first(x)      # shape: (N, 5)
             return self.second(a)  # shape: (N, 7)
 
-    network = Network()
-    y = network(x)
+    model = Model()
+    y = model(x)
 
-    # Now we can use `optimizer.setup(network)` - problem solved!
+    # Now we can use `optimizer.setup(model)` - problem solved!
 
 
 ## A2. Toolbox
 
-To design a deep learning network, you'll use a bunch of standard components. To find out more, explore the Chainer [function](http://docs.chainer.org/en/stable/reference/functions.html) and [link](http://docs.chainer.org/en/stable/reference/links.html) docs, but here are some relevant ones:
+To design a deep learning model, you'll use a bunch of standard components. To find out more, explore the Chainer [function](http://docs.chainer.org/en/stable/reference/functions.html) and [link](http://docs.chainer.org/en/stable/reference/links.html) docs, but here are some relevant ones:
 
 | Link/Function | Transforms shape | Purpose |
 | ------------- | ---------------- | ------- |
