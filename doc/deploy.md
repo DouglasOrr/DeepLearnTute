@@ -4,7 +4,7 @@ On the Azure web UI:
 
  - Machine: Docker on Ubuntu Server
  - Login: ssh
- - Pricing: Standard G1
+ - Pricing: D64 V3
  - Endpoints: Add HTTP (TCP) 80:80
  - Resource group: deep-learn-tute
  - Location: West Europe
