@@ -17,4 +17,4 @@ Wait for it to start, SSH into machine, then:
     wget https://raw.githubusercontent.com/DouglasOrr/DeepLearnTute/master/scripts/deploy
     chmod +x deploy
     ./deploy prepare USER1 USER2...
-    ./deploy start
+    ./deploy start -n 4
